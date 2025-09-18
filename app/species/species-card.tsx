@@ -14,10 +14,11 @@ import { Button } from "@/components/ui/button";
 import type { Database } from "@/lib/schema";
 import Image from "next/image";
 import SpeciesInformationDialog from "./species-information-dialog";
+import EditSpeciesDialog from "./edit-species-dialog";
 
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
-export default function SpeciesCard({ species }: { species: Species }) {
+export default function SpeciesCard({ species, userId }: { species: Species, userId: string }) {
   return (
     <div className="m-4 w-72 min-w-72 flex-none rounded border-2 p-3 shadow">
       {species.image && (
@@ -30,7 +31,11 @@ export default function SpeciesCard({ species }: { species: Species }) {
       <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
       {/* Replace the button with the detailed view dialog. */}
       <SpeciesInformationDialog species={species}></SpeciesInformationDialog>
+      {species.author===userId && (
+        <div>
+          <EditSpeciesDialog userId={userId} species={species}></EditSpeciesDialog>
+        </div>
+      )}
     </div>
   );
 }
-// testing

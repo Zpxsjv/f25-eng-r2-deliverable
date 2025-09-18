@@ -8,29 +8,42 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const verificationType = searchParams.get("type");
 
-  if (code) {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: CookieOptions) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            cookieStore.delete({ name, ...options });
-          },
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          cookieStore.delete({ name, ...options });
         },
       },
-    );
+    },
+  );
+
+  if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      return NextResponse.redirect(`${origin}/species`);
+    }
+  }
+
+  if (tokenHash && isEmailOtpType(verificationType)) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: verificationType,
+    });
     if (!error) {
       return NextResponse.redirect(`${origin}/species`);
     }
@@ -38,4 +51,9 @@ export async function GET(request: Request) {
 
   // return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+}
+
+function isEmailOtpType(value: string | null): value is "signup" | "invite" | "magiclink" | "recovery" | "email_change" | "email" {
+  if (!value) return false;
+  return ["signup", "invite", "magiclink", "recovery", "email_change", "email"].includes(value);
 }

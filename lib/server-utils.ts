@@ -2,6 +2,7 @@
 // For more info on how to avoid poisoning your server/client components: https://www.youtube.com/watch?v=BZlwtR9pDp4
 import { env } from "@/env.mjs";
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import "server-only";
@@ -15,6 +16,6 @@ export const createServerSupabaseClient = cache(() => {
         return cookieStore.get(name)?.value;
       },
     },
-  });
+  }) as unknown as SupabaseClient<Database, "public", "public", Database["public"]>;
   return supabase;
 });
