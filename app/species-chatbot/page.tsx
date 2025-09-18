@@ -8,6 +8,7 @@ export default function SpeciesChatbot() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState<{ role: "user" | "bot"; content: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -16,9 +17,59 @@ export default function SpeciesChatbot() {
     }
   };
 
-const handleSubmit = async () => {
-  // TODO: Implement this function
-}
+  const handleSubmit = async () => {
+    if (isLoading) {
+      return;
+    }
+
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage) {
+      return;
+    }
+
+    const fallbackMessage =
+      "I'm having trouble retrieving species information right now. Please try again in a moment.";
+
+  // Appends chat to previous chat log to keep history
+    setChatLog((prev) => [...prev, { role: "user", content: trimmedMessage }]);
+
+  // clears input message for next message
+    setMessage("");
+  
+  // flips loading flag (disables input on disabled=IsLoading)
+    setIsLoading(true);
+
+  // if the text-box extends, it resets after submitting
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+    }
+
+  // Sends user's message to /api/chat, waits for reply, then updates chat
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: trimmedMessage }),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { response?: string }
+        | null;
+// if response then trim and use, if not then fallback
+      const botMessage = data?.response?.trim() || fallbackMessage;
+// bot reply appended to chatLog, or fallback appended instead
+      setChatLog((prev) => [...prev, { role: "bot", content: botMessage }]);
+    } catch (error) {
+      setChatLog((prev) => [...prev, { role: "bot", content: fallbackMessage }]);
+    } finally {
+// allows user to type again after message is sent through
+      setIsLoading(false);
+    }
+  };
 
 return (
     <>
@@ -69,11 +120,13 @@ return (
             rows={1}
             placeholder="Ask about a species..."
             className="w-full resize-none overflow-hidden rounded border border-border bg-background p-2 text-sm text-foreground focus:outline-none"
+            disabled={isLoading}
           />
           <button
             type="button"
             onClick={() => void handleSubmit()}
             className="mt-2 rounded bg-primary px-4 py-2 text-background transition hover:opacity-90"
+            disabled={isLoading}
           >
             Enter
           </button>
