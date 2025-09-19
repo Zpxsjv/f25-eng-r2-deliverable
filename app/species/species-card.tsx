@@ -15,6 +15,7 @@ import type { Database } from "@/lib/schema";
 import Image from "next/image";
 import SpeciesInformationDialog from "./species-information-dialog";
 import EditSpeciesDialog from "./edit-species-dialog";
+import TrashSpeciesDialog from "./trash-species-dialog";
 
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
@@ -34,6 +35,7 @@ export default function SpeciesCard({ species, userId }: { species: Species, use
       {species.author===userId && (
         <div>
           <EditSpeciesDialog userId={userId} species={species}></EditSpeciesDialog>
+          <TrashSpeciesDialog species={species}></TrashSpeciesDialog>
         </div>
       )}
     </div>
