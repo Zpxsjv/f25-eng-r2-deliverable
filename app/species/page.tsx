@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/server-utils";
 import { redirect } from "next/navigation";
 import AddSpeciesDialog from "./add-species-dialog";
 import SpeciesCard from "./species-card";
+import type { SpeciesWithAuthor } from "./types";
 
 export default async function SpeciesList() {
   // Create supabase server component client and obtain user session from stored cookie
@@ -20,7 +21,20 @@ export default async function SpeciesList() {
   // Obtain the ID of the currently signed-in user
   const sessionId = session.user.id;
 
-  const { data: species } = await supabase.from("species").select("*").order("id", { ascending: false });
+  const { data: species } = await supabase
+    .from("species")
+    .select(
+      `*,
+      author_profile:profiles!species_author_fkey(
+        id,
+        display_name,
+        email,
+        biography
+      )`
+    )
+    .order("id", { ascending: false });
+
+  const speciesWithAuthor = (species ?? []) as SpeciesWithAuthor[];
 
   return (
     <>
@@ -30,7 +44,9 @@ export default async function SpeciesList() {
       </div>
       <Separator className="my-4" />
       <div className="flex flex-wrap justify-center">
-        {species?.map((species) => <SpeciesCard key={species.id} species={species} userId={sessionId}/>)}
+        {speciesWithAuthor.map((species) => (
+          <SpeciesCard key={species.id} species={species} userId={sessionId} />
+        ))}
       </div>
     </>
   );

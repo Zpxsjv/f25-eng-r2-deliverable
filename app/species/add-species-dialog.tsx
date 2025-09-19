@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
@@ -54,6 +55,7 @@ const speciesSchema = z.object({
     .nullable()
     // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+  endangered: z.boolean(),
 });
 
 type FormData = z.infer<typeof speciesSchema>;
@@ -72,6 +74,7 @@ const defaultValues: Partial<FormData> = {
   total_population: null,
   image: null,
   description: null,
+  endangered: false,
 };
 
 export default function AddSpeciesDialog({ userId }: { userId: string }) {
@@ -99,6 +102,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
         scientific_name: input.scientific_name,
         total_population: input.total_population,
         image: input.image,
+        endangered: input.endangered,
       },
     ]);
 
@@ -263,6 +267,33 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                           {...rest}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="endangered"
+                render={({ field }) => {
+                  const checkboxId = `${field.name}-checkbox`;
+                  return (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={field.value}
+                            onChange={(event) => field.onChange(event.target.checked)}
+                          />
+                        </FormControl>
+                        <Label htmlFor={checkboxId} className="m-0">
+                          Endangered
+                        </Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Indicates if this species is considered endangered.</p>
                       <FormMessage />
                     </FormItem>
                   );

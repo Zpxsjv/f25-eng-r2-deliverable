@@ -10,16 +10,13 @@ on the client-side to correctly match component state and props should the order
 React server components don't track state between rerenders, so leaving the uniquely identified components (e.g. SpeciesCard)
 can cause errors with matching props and state in child components if the list order changes.
 */
-import { Button } from "@/components/ui/button";
-import type { Database } from "@/lib/schema";
 import Image from "next/image";
 import SpeciesInformationDialog from "./species-information-dialog";
 import EditSpeciesDialog from "./edit-species-dialog";
 import TrashSpeciesDialog from "./trash-species-dialog";
+import type { SpeciesWithAuthor } from "./types";
 
-type Species = Database["public"]["Tables"]["species"]["Row"];
-
-export default function SpeciesCard({ species, userId }: { species: Species, userId: string }) {
+export default function SpeciesCard({ species, userId }: { species: SpeciesWithAuthor, userId: string }) {
   return (
     <div className="m-4 w-72 min-w-72 flex-none rounded border-2 p-3 shadow">
       {species.image && (
@@ -29,15 +26,20 @@ export default function SpeciesCard({ species, userId }: { species: Species, use
       )}
       <h3 className="mt-3 text-2xl font-semibold">{species.scientific_name}</h3>
       <h4 className="text-lg font-light italic">{species.common_name}</h4>
-      <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
-      {/* Replace the button with the detailed view dialog. */}
-      <SpeciesInformationDialog species={species}></SpeciesInformationDialog>
-      {species.author===userId && (
-        <div>
-          <EditSpeciesDialog userId={userId} species={species}></EditSpeciesDialog>
-          <TrashSpeciesDialog species={species}></TrashSpeciesDialog>
-        </div>
-      )}
+      <p className={`mt-1 text-sm font-medium ${species.endangered ? "text-red-600" : "text-emerald-600"}`}>
+        {species.endangered ? "Endangered" : "Not Endangered"}
+      </p>
+      <p className="break-words">{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
+      <div className="mt-4 flex flex-col gap-2">
+        {/* Replace the button with the detailed view dialog. */}
+        <SpeciesInformationDialog species={species}></SpeciesInformationDialog>
+        {species.author===userId && (
+          <div className="flex flex-col gap-2">
+            <EditSpeciesDialog userId={userId} species={species}></EditSpeciesDialog>
+            <TrashSpeciesDialog species={species}></TrashSpeciesDialog>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

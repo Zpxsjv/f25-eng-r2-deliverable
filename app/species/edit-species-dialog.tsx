@@ -17,6 +17,7 @@ import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createBrowserSupabaseClient } from "@/lib/client-utils";
@@ -51,7 +52,8 @@ const speciesSchema = z.object({
      .string()
      .nullable()
      // Transform empty string or only whitespace input to null before form submission, and trim whitespace otherwise
-     .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+      .transform((val) => (!val || val.trim() === "" ? null : val.trim())),
+    endangered: z.boolean(),
  });
 
  type FormData = z.infer<typeof speciesSchema>;
@@ -70,6 +72,7 @@ export default function EditSpeciesDialog({ userId, species }: { userId: string,
     total_population: species.total_population,
     image: species.image,
     description: species.description,
+    endangered: species.endangered,
   };
 
 // Control open/closed state of the dialog
@@ -94,6 +97,7 @@ export default function EditSpeciesDialog({ userId, species }: { userId: string,
           scientific_name: input.scientific_name,
           total_population: input.total_population,
           image: input.image,
+          endangered: input.endangered,
       }
 // .eq('id', species.id) makes sure ONLY the edited box changes by checking id
     ).eq('id', species.id);
@@ -254,6 +258,33 @@ return (
                           {...rest}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="endangered"
+                render={({ field }) => {
+                  const checkboxId = `${field.name}-checkbox`;
+                  return (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={field.value}
+                            onChange={(event) => field.onChange(event.target.checked)}
+                          />
+                        </FormControl>
+                        <Label htmlFor={checkboxId} className="m-0">
+                          Endangered
+                        </Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Indicates if this species is considered endangered.</p>
                       <FormMessage />
                     </FormItem>
                   );

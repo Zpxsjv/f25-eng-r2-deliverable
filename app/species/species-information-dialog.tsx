@@ -1,5 +1,4 @@
 "use client";
-import type { Database } from "@/lib/schema";
 import { useState } from "react";
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import type { SpeciesWithAuthor } from "./types";
 
 
 // lots of zod stuff in add-species-dialog, just used to relate to
@@ -18,14 +18,10 @@ import { Button } from "@/components/ui/button";
 
 
 // pulled Species part from species-card, essentially need to conserve the same content
-type Species = Database["public"]["Tables"]["species"]["Row"];
-
-
-
-
-export default function SpeciesInformationDialog({ species }: { species: Species }) {
+export default function SpeciesInformationDialog({ species }: { species: SpeciesWithAuthor }) {
   // Control open/closed state of the dialog
   const [open, setOpen] = useState<boolean>(false);
+  const author = species.author_profile;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -35,11 +31,25 @@ export default function SpeciesInformationDialog({ species }: { species: Species
           <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[600px]">
             <DialogHeader>
                 {/* Pulled species info from species-card, which is really from lib/Schema */}
-              <DialogTitle>{species.scientific_name}</DialogTitle>
+             <DialogTitle>{species.scientific_name}</DialogTitle>
              <DialogDescription>
               {species.common_name}, {species.kingdom}
               </DialogDescription>
             </DialogHeader>
+            {author ? (
+              <div className="mt-2 text-sm text-muted-foreground">
+                <p>
+                  Added by <span className="font-medium text-foreground">{author.display_name}</span>
+                  {author.email ? ` (${author.email})` : ""}
+                </p>
+                {author.biography ? <p className="mt-1">{author.biography}</p> : null}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">Author information unavailable.</p>
+            )}
+             <p className={`text-sm font-medium ${species.endangered ? "text-red-600" : "text-emerald-600"}`}>
+              {species.endangered ? "Endangered" : "Not Endangered"}
+             </p>
                  
                  {/* dealt with Unknown population problems or problems with description needing a period, etc */}
               <h1>Total Population: {species.total_population ?? "Unknown"}</h1>
